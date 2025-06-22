@@ -1,0 +1,19 @@
+{
+  "name": "slms-electronjs",
+  "version": "1.0.0",
+  "description": "SLMS Desktop Application with Electron.js",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["electron", "desktop", "dashboard", "login"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}

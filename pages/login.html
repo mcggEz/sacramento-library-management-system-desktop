@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLMS - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .login-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100vh;
+        }
+
+        .background-container {
+            background: url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+            background-size: cover;
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .go-back {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo img {
+            width: 60px; /* Adjust as needed */
+            height: 60px;
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .login-subtitle {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #777;
+        }
+        
+        .title-hr {
+            width: 50px;
+            margin: 0 auto 2rem;
+            border: 2px solid #84cc16; /* A shade of green */
+            background-color: #84cc16;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 20px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #84cc16;
+        }
+
+        .show-password {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        
+        .show-password input {
+            margin-right: 0.5rem;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #65a30d, #84cc16);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 2rem;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(132, 204, 22, 0.4);
+        }
+        
+        .links {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .links a {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            display: block;
+        }
+        
+        .links .admin-login {
+            margin-top: 0.25rem;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="background-container"></div>
+        <div class="login-container">
+   
+            <div class="login-box">
+                <div class="logo">
+                    <!-- Placeholder for logo -->
+                    <img src="https://placehold.co/60x60/84cc16/FFFFFF?text=L" alt="Logo">
+                </div>
+                
+                <h1 class="login-title">LOG IN</h1>
+                <hr class="title-hr" />
+                <p class="login-subtitle">Please provide the right information in logging in your account.</p>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <input type="text" id="email" name="email" placeholder="Email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="password" id="password" name="password" placeholder="Password" required>
+                    </div>
+                    
+                    <div class="show-password">
+                        <input type="checkbox" id="showPasswordCheckbox">
+                        <label for="showPasswordCheckbox">Show Password</label>
+                    </div>
+                    
+                    <button type="submit" class="login-btn">LOGIN</button>
+                </form>
+                
+                <div class="links">
+                 
+                    <a href="#" class="forgot-password">Forgot Password</a>
+                </div>
+
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            errorMessage.style.display = 'none';
+
+            // Using admin/password for demo as per the existing main.js logic
+            try {
+                const result = await ipcRenderer.invoke('login', { username: email, password: password });
+                
+                if (result.success) {
+                    await ipcRenderer.invoke('load-dashboard');
+                } else {
+                    errorMessage.textContent = result.message;
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'An error occurred. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        const passwordInput = document.getElementById('password');
+        const showPasswordCheckbox = document.getElementById('showPasswordCheckbox');
+
+        showPasswordCheckbox.addEventListener('change', () => {
+            if (showPasswordCheckbox.checked) {
+                passwordInput.type = 'text';
+            } else {
+                passwordInput.type = 'password';
+            }
+        });
+
+        // I've also updated the logic here to match the new username/email field.
+        // The old demo credentials box is removed.
+    </script>
+</body>
+</html> 
