@@ -88,9 +88,6 @@ ipcMain.handle('load-staffs', async () => {
 ipcMain.handle('load-members', async () => { mainWindow.loadFile('pages/members.html'); });
 ipcMain.handle('load-books', async () => { mainWindow.loadFile('pages/books.html'); });
 ipcMain.handle('load-borrowed-books', async () => { mainWindow.loadFile('pages/borrowed-books.html'); });
-ipcMain.handle('load-reservations', async () => { mainWindow.loadFile('pages/reservations.html'); });
-ipcMain.handle('load-announcements', async () => { mainWindow.loadFile('pages/announcements.html'); });
-ipcMain.handle('load-feedbacks', async () => { mainWindow.loadFile('pages/feedbacks.html'); });
 ipcMain.handle('load-help', async () => { mainWindow.loadFile('pages/help.html'); });
 ipcMain.handle('load-settings', async () => { mainWindow.loadFile('pages/settings.html'); });
 
