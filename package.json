@@ -9,11 +9,17 @@
     "build": "electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["electron", "desktop", "dashboard", "login"],
+  "keywords": [
+    "electron",
+    "desktop",
+    "dashboard",
+    "login"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "electron": "^28.0.0"
+    "electron": "^28.0.0",
+    "electron-reload": "^2.0.0-alpha.1"
   }
 }

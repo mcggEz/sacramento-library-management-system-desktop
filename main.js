@@ -1,3 +1,9 @@
+try {
+  require('electron-reload')(__dirname, {
+    electron: require(`${__dirname}/node_modules/electron`)
+  });
+} catch (_) {}
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 

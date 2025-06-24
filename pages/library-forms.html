@@ -3,134 +3,438 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Library Attendance Form</title>
+    <title>Manila-Sacramento Friendship Library - Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             background-color: #f0f2f5;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
         }
-        .form-container {
-            background: #fff;
-            padding: 2.5rem 2rem 2rem 2rem;
-            border-radius: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            width: 100%;
-            max-width: 400px;
+
+        .wrapper {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex: 1;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            height: 100vh;
         }
-        .back-btn {
-            align-self: flex-start;
-            background: none;
-            border: none;
-            color: #4CAF50;
-            font-size: 1.1rem;
-            cursor: pointer;
-            margin-bottom: 1.5rem;
+        
+        /* Header */
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        
+        .header-left {
             display: flex;
             align-items: center;
         }
-        .back-btn i {
-            margin-right: 0.5rem;
+        
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 1rem;
         }
-        .form-title {
+        
+        .header-title {
             font-size: 1.5rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-        .attendance-form label {
             font-weight: 500;
-            color: #333;
-            margin-bottom: 0.5rem;
-            display: block;
         }
-        .attendance-form input[type="text"] {
-            width: 100%;
-            padding: 0.7rem 1rem;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 1rem;
-            margin-bottom: 1.2rem;
+        
+        .header-right a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
         }
-        .attendance-form button {
-            width: 100%;
-            background: #4CAF50;
-            color: #fff;
+
+        /* Page Content */
+        .page-content {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            justify-content: center;
+    
+            padding: 1.5rem 2rem;
+        
+          
+        }
+        
+        .page-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .menu-toggle {
+            background: none;
             border: none;
-            padding: 0.8rem 0;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .attendance-form button:hover {
-            background: #388e3c;
-        }
-        .success-message {
-            color: #388e3c;
-            font-weight: 500;
-            margin-top: 1rem;
-            text-align: center;
-        }
-        .error-message {
-            color: #d32f2f;
-            font-weight: 500;
-            margin-top: 1rem;
-            text-align: center;
-        }
-        .form-title {
             font-size: 1.5rem;
+            cursor: pointer;
+            margin-right: 1rem;
+            color: #333;
+        }
+
+        .page-title {
+            font-size: 2rem;
             font-weight: 600;
             color: #333;
-            margin-bottom: 1.5rem;
-            text-align: center;
+            display: flex;
+            align-items: center;
         }
+        
+        .page-title i {
+            margin-right: 1rem;
+            color: #4CAF50;
+        }
+        
+        /* Stat Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+            border-radius: 12px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 120px;
+        }
+
+        .stat-card.attendance { background-color: #a5d6a7; }
+        .stat-card.resources { background-color: #c5e1a5; }
+        .stat-card.space { background-color: #b9f6ca; }
+        
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .stat-card-header i {
+            margin-right: 0.75rem;
+        }
+        
+        .stat-card-value {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        /* Recent Activity */
+        .activity-section {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .activity-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .activity-header i {
+            margin-right: 1rem;
+            color: #4CAF50;
+        }
+        
+        .activity-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-btn {
+            background-color: #f0f2f5;
+            border: 1px solid #ddd;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .filter-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .generate-excel {
+            background-color: #1e88e5;
+            color: white;
+            border: none;
+        }
+        
+        .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .date-filter input {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+        
+        .date-filter button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+      
+
     </style>
 </head>
 <body>
-    <nav>
-
-        <p class="form-title">Sacrament Library Attendance Form</p>
-    </nav>
-    <div class="form-container">
-        <button class="back-btn" id="back-btn"><i class="fas fa-arrow-left"></i>Back</button>
-        <div class="form-title">Library Attendance Form</div>
-        <form class="attendance-form" id="attendance-form">
-            <label for="student-number">Student Number</label>
-            <input type="text" id="student-number" name="student-number" placeholder="Enter your student number" required autofocus>
-            <button type="submit">Submit</button>
-        </form>
-        <div class="success-message" id="success-message" style="display:none;">Attendance recorded! Thank you.</div>
-        <div class="error-message" id="error-message" style="display:none;"></div>
+    <div class="wrapper">
+        <main class="main-content">
+            <header class="header">
+                <button id="back-to-dashboard" style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;margin-right:1rem;display:flex;align-items:center;"><i class="fas fa-arrow-left"></i></button>
+                <div class="header-left" style="flex:1;display:flex;align-items:center;">
+                    <img src="https://placehold.co/40x40/ffffff/4CAF50?text=L" alt="Logo" class="header-logo">
+                    <h1 class="header-title">Manila-Sacramento Friendship Library</h1>
+                </div>
+                <div class="header-right">
+                    <a href="#" class="nav-link" data-page="dashboard"><i class="fas fa-tachometer-alt"></i><span class="nav-text">Dashboard</span></a>
+                </div>
+            </header>
+            <div style="display: flex; gap: 2rem; padding: 2rem; height: calc(100vh - 80px);">
+                <!-- Attendance Form Card -->
+                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 2rem; width: 50%; height: fit-content; display: flex; flex-direction: column;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; color: #333; margin-bottom: 1.5rem; text-align: center;">Attendance Form</h2>
+                    
+                    <form id="attendance-form" style="display: flex; flex-direction: column; gap: 1.2rem;">
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label for="attendance-date" style="font-weight: 500; color: #555; font-size: 0.9rem;">Date</label>
+                            <input type="date" id="attendance-date" name="attendance-date" required 
+                                   style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: #f9f9f9;">
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label for="attendance-name" style="font-weight: 500; color: #555; font-size: 0.9rem;">Full Name</label>
+                            <input type="text" id="attendance-name" name="attendance-name" placeholder="Enter your full name" required 
+                                   style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: #f9f9f9;">
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label for="attendance-libnum" style="font-weight: 500; color: #555; font-size: 0.9rem;">Library Number</label>
+                            <input type="text" id="attendance-libnum" name="attendance-libnum" placeholder="Enter library number" required 
+                                   style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: #f9f9f9;">
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label for="attendance-purpose" style="font-weight: 500; color: #555; font-size: 0.9rem;">Purpose of Visit</label>
+                            <select id="attendance-purpose" name="attendance-purpose" required 
+                                    style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: #f9f9f9;">
+                                <option value="">Select purpose</option>
+                                <option value="study">Study/Research</option>
+                                <option value="borrow">Borrow Books</option>
+                                <option value="return">Return Books</option>
+                                <option value="computer">Use Computer</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" style="background: linear-gradient(135deg, #4CAF50, #45a049); color: white; border: none; padding: 1rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 1rem; transition: transform 0.2s;">
+                            Submit Attendance
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Profile Card -->
+                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 2rem; width: 50%; height: fit-content; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #e3f2fd, #bbdefb); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                        <i class="fas fa-user" style="font-size: 2.5rem; color: #1976d2;"></i>
+                    </div>
+                    
+                    <h3 style="font-size: 1.3rem; font-weight: 600; color: #333; margin-bottom: 0.5rem;">John Doe</h3>
+                    <p style="color: #666; margin-bottom: 0.5rem; font-size: 0.95rem;">Library Number: 123456</p>
+                    <p style="color: #888; font-size: 0.9rem;">Student</p>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #f5f5f5; border-radius: 8px; width: 100%;">
+                        <h4 style="font-size: 1rem; font-weight: 600; color: #333; margin-bottom: 0.5rem;">Today's Stats</h4>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.9rem; color: #666;">Visits: <strong style="color: #333;">3</strong></span>
+                            <span style="font-size: 0.9rem; color: #666;">Books: <strong style="color: #333;">2</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Attendance Records Table -->
+            <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 0 2rem 2rem 2rem; padding: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid #eee;">
+                    <h3 style="font-size: 1.2rem; font-weight: 600; color: #333;">Recent Attendance Records</h3>
+                    <div style="display: flex; gap: 1rem; font-size: 0.85rem; color: #666;">
+                        <span>Total: <strong id="total-records" style="color: #333;">1</strong></span>
+                        <span>Today: <strong id="today-records" style="color: #333;">1</strong></span>
+                    </div>
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 0.8rem; text-align: left; font-weight: 600; color: #495057; border-bottom: 1px solid #dee2e6;">Date</th>
+                            <th style="padding: 0.8rem; text-align: left; font-weight: 600; color: #495057; border-bottom: 1px solid #dee2e6;">Name</th>
+                            <th style="padding: 0.8rem; text-align: left; font-weight: 600; color: #495057; border-bottom: 1px solid #dee2e6;">Library #</th>
+                            <th style="padding: 0.8rem; text-align: left; font-weight: 600; color: #495057; border-bottom: 1px solid #dee2e6;">Purpose</th>
+                            <th style="padding: 0.8rem; text-align: left; font-weight: 600; color: #495057; border-bottom: 1px solid #dee2e6;">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-table-body">
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 0.8rem;">2024-06-24</td>
+                            <td style="padding: 0.8rem;">John Doe</td>
+                            <td style="padding: 0.8rem;">123456</td>
+                            <td style="padding: 0.8rem;">Study/Research</td>
+                            <td style="padding: 0.8rem;">09:30 AM</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
     </div>
+
     <script>
         const { ipcRenderer } = require('electron');
-        document.getElementById('back-btn').addEventListener('click', () => {
+
+        function logout() {
+            ipcRenderer.invoke('load-login');
+        }
+
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // Navigation logic
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = e.currentTarget.dataset.page;
+                console.log('Navigation clicked:', page); // Debug log
+                if (page) {
+                    console.log('Invoking IPC for page:', page); // Debug log
+                    ipcRenderer.invoke(`load-${page}`);
+                } else {
+                    console.error('No data-page attribute found for:', e.currentTarget); // Debug log
+                }
+            });
+        });
+
+        // Header navigation
+        document.getElementById('library-forms-link').addEventListener('click', () => ipcRenderer.invoke('load-library-forms'));
+
+        document.getElementById('back-to-dashboard').addEventListener('click', () => {
             ipcRenderer.invoke('load-dashboard');
         });
+
         document.getElementById('attendance-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const studentNumber = document.getElementById('student-number').value.trim();
-            const successMsg = document.getElementById('success-message');
-            const errorMsg = document.getElementById('error-message');
-            successMsg.style.display = 'none';
-            errorMsg.style.display = 'none';
-            if (!studentNumber) {
-                errorMsg.textContent = 'Please enter your student number.';
-                errorMsg.style.display = 'block';
-                return;
-            }
-            // Simulate attendance recording (replace with real logic if needed)
-            successMsg.style.display = 'block';
+            const date = document.getElementById('attendance-date').value;
+            const name = document.getElementById('attendance-name').value.trim();
+            const libnum = document.getElementById('attendance-libnum').value.trim();
+            const purpose = document.getElementById('attendance-purpose').value;
+            
+            if (!date || !name || !libnum || !purpose) return;
+            
+            // Get current time
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            // Add to table
+            const tbody = document.getElementById('attendance-table-body');
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #eee';
+            tr.innerHTML = `
+                <td style="padding: 0.8rem;">${date}</td>
+                <td style="padding: 0.8rem;">${name}</td>
+                <td style="padding: 0.8rem;">${libnum}</td>
+                <td style="padding: 0.8rem;">${purpose}</td>
+                <td style="padding: 0.8rem;">${timeString}</td>
+            `;
+            tbody.appendChild(tr);
+            
+            // Update stats
+            updateTableStats();
+            
+            // Reset form
             document.getElementById('attendance-form').reset();
+            
+            // Reset date to current date
+            const dateInput = document.getElementById('attendance-date');
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            dateInput.value = `${yyyy}-${mm}-${dd}`;
+        });
+
+        function updateTableStats() {
+            const tbody = document.getElementById('attendance-table-body');
+            const totalRecords = tbody.children.length;
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecords = Array.from(tbody.children).filter(row => 
+                row.children[0].textContent === today
+            ).length;
+            
+            document.getElementById('total-records').textContent = totalRecords;
+            document.getElementById('today-records').textContent = todayRecords;
+        }
+
+        // Set current date for attendance form
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('attendance-date');
+            if (dateInput) {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                dateInput.value = `${yyyy}-${mm}-${dd}`;
+            }
         });
     </script>
 </body>
