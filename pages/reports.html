@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manila-Sacramento Friendship Library - Feedbacks</title>
+    <title>Manila-Sacramento Friendship Library - Reports</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Reusing the same styles from dashboard.html for consistency */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f0f2f5; }
         .wrapper { display: flex; height: 100vh; }
@@ -46,11 +45,10 @@
                 <li><a href="#" class="nav-link" data-page="members"><i class="fas fa-users"></i><span class="nav-text">Members</span></a></li>
                 <li><a href="#" class="nav-link" data-page="books"><i class="fas fa-book"></i><span class="nav-text">Books</span></a></li>
                 <li><a href="#" class="nav-link" data-page="borrowed-books"><i class="fas fa-book-reader"></i><span class="nav-text">Borrowed Books</span></a></li>
-                <li><a href="#" class="nav-link" data-page="announcements"><i class="fas fa-bullhorn"></i><span class="nav-text">Announcements</span></a></li>
-                <li><a href="#" class="nav-link active" data-page="feedbacks"><i class="fas fa-comment-dots"></i><span class="nav-text">Feedbacks</span></a></li>
+     
                 <li><a href="#" class="nav-link" data-page="help"><i class="fas fa-question-circle"></i><span class="nav-text">Help</span></a></li>
-                <li><a href="#" class="nav-link" data-page="reports"><i class="fas fa-chart-bar"></i><span class="nav-text">Reports</span></a></li>
                 <li><a href="#" class="nav-link" data-page="settings"><i class="fas fa-cog"></i><span class="nav-text">Settings</span></a></li>
+                <li><a href="#" class="nav-link active" data-page="reports"><i class="fas fa-chart-bar"></i><span class="nav-text">Reports</span></a></li>
             </ul>
             <a class="logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span class="logout-text">Logout</span></a>
         </aside>
@@ -69,17 +67,56 @@
             <div class="page-content">
                 <div class="page-header">
                     <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
-                    <h2 class="page-title"><i class="fas fa-comment-dots"></i>Feedbacks</h2>
+                    <h2 class="page-title"><i class="fas fa-chart-bar"></i>Reports</h2>
                 </div>
                 
                 <section class="content-section">
-                    <h2>Feedbacks Content Goes Here</h2>
-                    <p>This is a placeholder for the feedbacks page.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="margin: 0;">Sample Reports Table</h2>
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <label for="excel-file" style="font-weight: 500;">View Excel File:</label>
+                        <input type="file" id="excel-file" accept=".xlsx, .xls" style="margin-left: 1rem;">
+                    </div>
+                    <div id="excel-table-container"></div>
+                    <div style="overflow-x: auto; margin-top: 2rem;">
+                        <table style="width: 100%; border-collapse: collapse; background: #fafafa;">
+                            <thead>
+                                <tr style="background: #f0f2f5;">
+                                    <th style="padding: 0.75rem 1rem; text-align: left;">Report Name</th>
+                                    <th style="padding: 0.75rem 1rem; text-align: left;">Date Generated</th>
+                                    <th style="padding: 0.75rem 1rem; text-align: left;">Status</th>
+                                    <th style="padding: 0.75rem 1rem; text-align: left;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 0.75rem 1rem;">Monthly Borrowed Books</td>
+                                    <td style="padding: 0.75rem 1rem;">2024-06-01</td>
+                                    <td style="padding: 0.75rem 1rem;">Completed</td>
+                                    <td style="padding: 0.75rem 1rem;">
+                                        <button style="background: #2196F3; color: #fff; border: none; padding: 0.4rem 0.9rem; border-radius: 4px; margin-right: 0.5rem; cursor: pointer; font-size: 0.95rem;" onclick="viewReport(this)"><i class='fas fa-eye'></i> View</button>
+                                        <button style="background: #4CAF50; color: #fff; border: none; padding: 0.4rem 0.9rem; border-radius: 4px; cursor: pointer; font-size: 0.95rem;" onclick="downloadReport(this)"><i class='fas fa-download'></i> Download</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 0.75rem 1rem;">Overdue Members</td>
+                                    <td style="padding: 0.75rem 1rem;">2024-05-28</td>
+                                    <td style="padding: 0.75rem 1rem;">Completed</td>
+                                    <td style="padding: 0.75rem 1rem;">
+                                        <button style="background: #2196F3; color: #fff; border: none; padding: 0.4rem 0.9rem; border-radius: 4px; margin-right: 0.5rem; cursor: pointer; font-size: 0.95rem;" onclick="viewReport(this)"><i class='fas fa-eye'></i> View</button>
+                                        <button style="background: #4CAF50; color: #fff; border: none; padding: 0.4rem 0.9rem; border-radius: 4px; cursor: pointer; font-size: 0.95rem;" onclick="downloadReport(this)"><i class='fas fa-download'></i> Download</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </section>
             </div>
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         const { ipcRenderer } = require('electron');
         function logout() { ipcRenderer.invoke('load-login'); }
@@ -93,9 +130,32 @@
                 if (page) { ipcRenderer.invoke(`load-${page}`); }
             });
         });
-
         // Header navigation
         document.getElementById('library-forms-link').addEventListener('click', () => ipcRenderer.invoke('load-library-forms'));
+        // Sample report actions
+        function viewReport(btn) {
+            alert('View Report clicked!');
+        }
+        function downloadReport(btn) {
+            alert('Download Report clicked!');
+        }
+        // Excel file viewer logic
+        document.getElementById('excel-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                // Get the first sheet
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                // Convert to HTML table
+                const html = XLSX.utils.sheet_to_html(worksheet, { id: 'excel-table', editable: false });
+                document.getElementById('excel-table-container').innerHTML = html;
+            };
+            reader.readAsArrayBuffer(file);
+        });
     </script>
 </body>
 </html> 

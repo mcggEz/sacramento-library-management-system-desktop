@@ -3,219 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Library Forms - Manila-Sacramento Friendship Library</title>
+    <title>Library Attendance Form</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f0f2f5; }
-        
-        .header { 
-            background-color: #4CAF50; 
-            color: white; 
-            padding: 1rem 2rem; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        body {
+            background-color: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .header-left { display: flex; align-items: center; }
-        .header-logo { width: 40px; height: 40px; margin-right: 1rem; }
-        .header-title { font-size: 1.5rem; font-weight: 500; }
-        .close-btn { 
-            background: none; 
-            border: none; 
-            color: white; 
-            font-size: 1.5rem; 
-            cursor: pointer; 
-            padding: 0.5rem;
-            border-radius: 4px;
-            transition: background-color 0.2s;
+        .form-container {
+            background: #fff;
+            padding: 2.5rem 2rem 2rem 2rem;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .close-btn:hover { background-color: rgba(255,255,255,0.1); }
-        
-        .page-content { padding: 2rem; }
-        .page-header { 
-            display: flex; 
-            align-items: center; 
-            margin-bottom: 2rem; 
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        .page-title { 
-            font-size: 2rem; 
-            font-weight: 600; 
-            color: #333; 
-            display: flex; 
-            align-items: center; 
-        }
-        .page-title i { margin-right: 1rem; color: #4CAF50; }
-        
-        .content-section { 
-            background-color: #fff; 
-            padding: 2rem; 
-            border-radius: 12px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-        }
-        
-        .forms-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-        
-        .form-card {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+        .back-btn {
+            align-self: flex-start;
+            background: none;
+            border: none;
+            color: #4CAF50;
+            font-size: 1.1rem;
             cursor: pointer;
-            border: 2px solid transparent;
-        }
-        
-        .form-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            border-color: #4CAF50;
-        }
-        
-        .form-card h3 {
-            color: #333;
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
         }
-        
-        .form-card i {
-            margin-right: 0.8rem;
-            color: #4CAF50;
+        .back-btn i {
+            margin-right: 0.5rem;
+        }
+        .form-title {
             font-size: 1.5rem;
-        }
-        
-        .form-card p {
-            color: #666;
-            line-height: 1.6;
+            font-weight: 600;
+            color: #333;
             margin-bottom: 1.5rem;
+            text-align: center;
         }
-        
-        .form-btn {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 6px;
-            cursor: pointer;
+        .attendance-form label {
             font-weight: 500;
-            transition: background-color 0.2s;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: block;
         }
-        
-        .form-btn:hover {
-            background-color: #45a049;
+        .attendance-form input[type="text"] {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1.2rem;
+        }
+        .attendance-form button {
+            width: 100%;
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 0.8rem 0;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .attendance-form button:hover {
+            background: #388e3c;
+        }
+        .success-message {
+            color: #388e3c;
+            font-weight: 500;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .error-message {
+            color: #d32f2f;
+            font-weight: 500;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .form-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="header-left">
-            <img src="https://placehold.co/40x40/ffffff/4CAF50?text=L" alt="Logo" class="header-logo">
-            <h1 class="header-title">Library Forms</h1>
-        </div>
-        <button class="close-btn" onclick="closeWindow()">
-            <i class="fas fa-times"></i>
-        </button>
-    </header>
-    
-    <div class="page-content">
-        <div class="page-header">
-            <h2 class="page-title"><i class="fas fa-file-alt"></i>Available Forms</h2>
-        </div>
-        
-        <section class="content-section">
-            <p style="font-size: 1.1rem; color: #666; margin-bottom: 2rem;">
-                Select a form below to access library services and applications.
-            </p>
-            
-            <div class="forms-grid">
-                <div class="form-card" onclick="openForm('membership')">
-                    <h3><i class="fas fa-user-plus"></i>Membership Application</h3>
-                    <p>Apply for a new library membership. Required for borrowing books and accessing library services.</p>
-                    <button class="form-btn">Open Form</button>
-                </div>
-                
-                <div class="form-card" onclick="openForm('book-request')">
-                    <h3><i class="fas fa-book-medical"></i>Book Request Form</h3>
-                    <p>Request books that are not currently in our collection. We'll consider adding them to our library.</p>
-                    <button class="form-btn">Open Form</button>
-                </div>
-                
-                <div class="form-card" onclick="openForm('interlibrary')">
-                    <h3><i class="fas fa-exchange-alt"></i>Interlibrary Loan</h3>
-                    <p>Request books from other libraries through our interlibrary loan service.</p>
-                    <button class="form-btn">Open Form</button>
-                </div>
-                
-                <div class="form-card" onclick="openForm('event-registration')">
-                    <h3><i class="fas fa-calendar-plus"></i>Event Registration</h3>
-                    <p>Register for library events, workshops, and educational programs.</p>
-                    <button class="form-btn">Open Form</button>
-                </div>
-                
-                <div class="form-card" onclick="openForm('volunteer')">
-                    <h3><i class="fas fa-hands-helping"></i>Volunteer Application</h3>
-                    <p>Apply to volunteer at the library. Help us serve our community better.</p>
-                    <button class="form-btn">Open Form</button>
-                </div>
-                
-                <div class="form-card" onclick="openForm('donation')">
-                    <h3><i class="fas fa-gift"></i>Book Donation</h3>
-                    <p>Donate books to our library. Help expand our collection for the community.</p>
-                    <button class="form-btn">Open Form</button>
-                </div>
-            </div>
-        </section>
-    </div>
+    <nav>
 
+        <p class="form-title">Sacrament Library Attendance Form</p>
+    </nav>
+    <div class="form-container">
+        <button class="back-btn" id="back-btn"><i class="fas fa-arrow-left"></i>Back</button>
+        <div class="form-title">Library Attendance Form</div>
+        <form class="attendance-form" id="attendance-form">
+            <label for="student-number">Student Number</label>
+            <input type="text" id="student-number" name="student-number" placeholder="Enter your student number" required autofocus>
+            <button type="submit">Submit</button>
+        </form>
+        <div class="success-message" id="success-message" style="display:none;">Attendance recorded! Thank you.</div>
+        <div class="error-message" id="error-message" style="display:none;"></div>
+    </div>
     <script>
         const { ipcRenderer } = require('electron');
-        
-        console.log('Library forms window loaded');
-        
-        function closeWindow() {
-            console.log('Closing library forms window');
-            window.close();
-        }
-        
-        function openForm(formType) {
-            // For now, just show an alert. You can implement actual form opening logic here
-            alert(`Opening ${formType} form...\n\nThis would typically open a specific form or modal.`);
-            
-            // Example of what you might do:
-            // switch(formType) {
-            //     case 'membership':
-            //         // Open membership form
-            //         break;
-            //     case 'book-request':
-            //         // Open book request form
-            //         break;
-            //     // etc.
-            // }
-        }
-        
-        // Prevent the default close behavior and use our custom close
-        window.addEventListener('beforeunload', (e) => {
-            console.log('Window beforeunload event');
-            // Don't prevent default - let the window close normally
+        document.getElementById('back-btn').addEventListener('click', () => {
+            ipcRenderer.invoke('load-dashboard');
         });
-        
-        // Add keyboard shortcut to close window (Ctrl+W or Cmd+W)
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
-                e.preventDefault();
-                closeWindow();
+        document.getElementById('attendance-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const studentNumber = document.getElementById('student-number').value.trim();
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+            if (!studentNumber) {
+                errorMsg.textContent = 'Please enter your student number.';
+                errorMsg.style.display = 'block';
+                return;
             }
+            // Simulate attendance recording (replace with real logic if needed)
+            successMsg.style.display = 'block';
+            document.getElementById('attendance-form').reset();
         });
     </script>
 </body>

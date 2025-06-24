@@ -90,65 +90,10 @@ ipcMain.handle('load-books', async () => { mainWindow.loadFile('pages/books.html
 ipcMain.handle('load-borrowed-books', async () => { mainWindow.loadFile('pages/borrowed-books.html'); });
 ipcMain.handle('load-help', async () => { mainWindow.loadFile('pages/help.html'); });
 ipcMain.handle('load-settings', async () => { mainWindow.loadFile('pages/settings.html'); });
-
+ipcMain.handle('load-reports', async () => { mainWindow.loadFile('pages/reports.html'); });
 // IPC handlers for header links
-ipcMain.handle('load-library-forms', async () => { 
-    console.log('Creating new library forms window...');
-    
-    // Check if a forms window already exists
-    const existingWindows = BrowserWindow.getAllWindows();
-    const existingFormsWindow = existingWindows.find(win => win.getTitle().includes('Library Forms'));
-    
-    if (existingFormsWindow) {
-        console.log('Forms window already exists, focusing it...');
-        existingFormsWindow.focus();
-        return { success: true };
-    }
-    
-    const formsWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
-        },
-        title: 'Library Forms - Manila-Sacramento Friendship Library',
-        icon: null, // You can add an icon path here if you have one
-        resizable: true,
-        minimizable: true,
-        maximizable: true,
-        show: false, // Don't show until ready
-        parent: mainWindow, // Make it a child of the main window
-        modal: false // Don't make it modal
-    });
-    
-    console.log('Forms window created, loading content...');
-    
-    try {
-        // Load the forms page
-        await formsWindow.loadFile('pages/library-forms.html');
-        console.log('Forms page loaded successfully');
-        
-        // Show the window when ready
-        formsWindow.once('ready-to-show', () => {
-            formsWindow.show();
-            formsWindow.focus(); // Bring to front
-            console.log('Library forms window is now visible');
-        });
-        
-        // Handle window closed
-        formsWindow.on('closed', () => {
-            console.log('Library forms window closed');
-        });
-        
-        // Optional: Open DevTools in development
-        if (process.argv.includes('--dev')) {
-            formsWindow.webContents.openDevTools();
-        }
-        
-        return { success: true };
-    } catch (error) {
-        console.error('Error creating forms window:', error);
-        return { success: false, error: error.message };
-    }
+ipcMain.handle('load-library-forms', async () => {
+  mainWindow.loadFile('pages/library-forms.html');
+  return { success: true };
 });
+
