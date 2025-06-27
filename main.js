@@ -7,9 +7,17 @@ try {
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
+// Import the database manager
+const DatabaseManager = require('./database.js');
+
 let mainWindow;
+let dbManager;
 
 function createWindow() {
+  // Initialize database
+  dbManager = new DatabaseManager();
+  dbManager.initTables(); // Initialize tables and create default admin user
+
   // Create the browser window
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -41,6 +49,10 @@ function createWindow() {
   // Handle window closed
   mainWindow.on('closed', () => {
     mainWindow = null;
+    // Close database connection when app closes
+    if (dbManager) {
+      dbManager.close();
+    }
   });
 }
 
@@ -60,15 +72,33 @@ app.on('activate', () => {
   }
 });
 
-// IPC handlers for login
+// IPC handlers for login with database authentication
 ipcMain.handle('login', async (event, credentials) => {
-  // Simple authentication logic (replace with your actual auth)
-  const { username, password } = credentials;
-  
-  if (username === 'admin' && password === 'password') {
-    return { success: true, message: 'Login successful' };
-  } else {
-    return { success: false, message: 'Invalid credentials' };
+  try {
+    const { username, password } = credentials;
+    
+    // Use database authentication
+    const isAuthenticated = dbManager.authenticateAdmin(username, password);
+    
+    if (isAuthenticated) {
+      return { success: true, message: 'Login successful' };
+    } else {
+      return { success: false, message: 'Invalid username or password' };
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    return { success: false, message: 'Database error occurred' };
+  }
+});
+
+// IPC handler to get admin user info
+ipcMain.handle('get-admin-info', async (event, username) => {
+  try {
+    const adminInfo = dbManager.getAdminByUsername(username);
+    return { success: true, data: adminInfo };
+  } catch (error) {
+    console.error('Get admin info error:', error);
+    return { success: false, message: 'Failed to get admin information' };
   }
 });
 

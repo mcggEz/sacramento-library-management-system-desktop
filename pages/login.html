@@ -168,8 +168,8 @@
    
             <div class="login-box">
                 <div class="logo">
-                    <!-- Placeholder for logo -->
-                    <img src="https://placehold.co/60x60/84cc16/FFFFFF?text=L" alt="Logo">
+                    <!-- User's actual logo -->
+                    <img src="C:\Users\mcgg\Downloads\logo.jpg" alt="Logo" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
                 </div>
                 
                 <h1 class="login-title">LOG IN</h1>
@@ -178,7 +178,7 @@
                 
                 <form id="loginForm">
                     <div class="form-group">
-                        <input type="text" id="email" name="email" placeholder="Email" required>
+                        <input type="text" id="username" name="username" placeholder="Username" required>
                     </div>
                     
                     <div class="form-group">
@@ -190,11 +190,10 @@
                         <label for="showPasswordCheckbox">Show Password</label>
                     </div>
                     
-                    <button type="submit" class="login-btn">LOGIN</button>
+                    <button type="submit" class="login-btn" id="loginBtn">LOGIN</button>
                 </form>
                 
                 <div class="links">
-                 
                     <a href="#" class="forgot-password">Forgot Password</a>
                 </div>
 
@@ -209,25 +208,48 @@
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
+            const loginBtn = document.getElementById('loginBtn');
             
+            // Clear previous error
             errorMessage.style.display = 'none';
+            
+            // Validate inputs
+            if (!username || !password) {
+                errorMessage.textContent = 'Please enter both username and password';
+                errorMessage.style.display = 'block';
+                return;
+            }
 
-            // Using admin/password for demo as per the existing main.js logic
+            // Show loading state
+            loginBtn.textContent = 'LOGGING IN...';
+            loginBtn.disabled = true;
+            loginBtn.style.opacity = '0.7';
+
             try {
-                const result = await ipcRenderer.invoke('login', { username: email, password: password });
+                const result = await ipcRenderer.invoke('login', { username, password });
                 
                 if (result.success) {
+                    // Store username for later use
+                    localStorage.setItem('currentUser', username);
+                    
+                    // Redirect to dashboard
                     await ipcRenderer.invoke('load-dashboard');
                 } else {
-                    errorMessage.textContent = result.message;
+                    errorMessage.textContent = result.message || 'Login failed';
                     errorMessage.style.display = 'block';
                 }
             } catch (error) {
+                console.error('Login error:', error);
                 errorMessage.textContent = 'An error occurred. Please try again.';
                 errorMessage.style.display = 'block';
+            } finally {
+                // Reset button state
+                loginBtn.textContent = 'LOGIN';
+                loginBtn.disabled = false;
+                loginBtn.style.opacity = '1';
             }
         });
 
@@ -242,8 +264,10 @@
             }
         });
 
-        // I've also updated the logic here to match the new username/email field.
-        // The old demo credentials box is removed.
+        // Focus on username field when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('username').focus();
+        });
     </script>
 </body>
 </html> 
