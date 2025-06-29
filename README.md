@@ -1,6 +1,6 @@
 # Sacramento Libary Management System Desktop Application
 
-A desktop application built with Electron.js and better-sqlite3 for the admins of the Sacramento Library.
+A desktop application built with Electron.js and sql.js for the admins of the Sacramento Library.
 
 ## Features
 
