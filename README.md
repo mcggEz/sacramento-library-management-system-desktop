@@ -1,6 +1,6 @@
-# SLMS Desktop Application
+# Sacramento Libary Management System Desktop Application
 
-A modern desktop application built with Electron.js featuring a login system for the admins of the Sacramento Library.
+A desktop application built with Electron.js and better-sqlite3 for the admins of the Sacramento Library.
 
 ## Features
 
