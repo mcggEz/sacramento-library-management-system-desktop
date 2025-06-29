@@ -1,11 +1,11 @@
 # SLMS Desktop Application
 
-A modern desktop application built with Electron.js featuring a login system and dashboard for Student Learning Management System (SLMS).
+A modern desktop application built with Electron.js featuring a login system for the admins of the Sacramento Library.
 
 ## Features
 
-- 🔐 **Secure Login System**  
-  Beautiful login interface with authentication
+- 🔐 **Login System**  
+  Login interface with authentication
 - 📊 **Modern Dashboard**  
   Clean and responsive dashboard with statistics
 - 🎨 **Beautiful UI**  
@@ -20,38 +20,6 @@ A modern desktop application built with Electron.js featuring a login system and
 - Node.js (version 14 or higher)
 - npm (comes with Node.js)
 
-## Installation
-
-1. Clone or download this repository
-2. Navigate to the project directory:
-
-   ```bash
-   cd slms-electronjs
-   ```
-
-3. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-## Running the Application
-
-### Development Mode
-
-```bash
-npm run dev
-```
-
-This will start the application in development mode with DevTools open.
-
-### Production Mode
-
-```bash
-npm start
-```
-
-This will start the application in production mode.
 
 ## Demo Credentials
 
@@ -72,63 +40,3 @@ slms-electronjs/
 └── README.md           # This file
 ```
 
-## Available Scripts
-
-- `npm start` - Start the application
-- `npm run dev` - Start in development mode with DevTools
-- `npm run build` - Build the application for distribution
-
-## Customization
-
-### Adding New Pages
-
-1. Create a new HTML file in the `pages/` directory
-2. Add navigation logic in the main process (`main.js`)
-3. Update the dashboard navigation menu
-
-### Styling
-
-The application uses modern CSS with:
-
-- Flexbox and Grid layouts
-- CSS animations and transitions
-- Gradient backgrounds
-- Responsive design principles
-
-### Authentication
-
-The current authentication is a simple demo. To implement real authentication:
-
-1. Modify the `login` IPC handler in `main.js`
-2. Add database connectivity
-3. Implement proper session management
-
-## Building for Distribution
-
-To build the application for distribution, you'll need to install electron-builder:
-
-```bash
-npm install electron-builder --save-dev
-```
-
-Then run:
-
-```bash
-npm run build
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is licensed under the ISC License.
-
-## Support
-
-If you encounter any issues or have questions, please open an issue on the repository.
