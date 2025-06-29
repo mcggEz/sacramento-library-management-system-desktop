@@ -344,16 +344,20 @@
                 
                 <div class="stats-grid">
                     <div class="stat-card attendance">
-                        <div class="stat-card-header"><i class="fas fa-user-check"></i>Attendance</div>
-                        <div class="stat-card-value">0</div>
+                        <div class="stat-card-header"><i class="fas fa-user-check"></i>Total Members</div>
+                        <div class="stat-card-value" id="total-members">0</div>
                     </div>
                     <div class="stat-card resources">
-                        <div class="stat-card-header"><i class="fas fa-book-open"></i>Library Resources</div>
-                        <div class="stat-card-value">0</div>
+                        <div class="stat-card-header"><i class="fas fa-book-open"></i>Total Books</div>
+                        <div class="stat-card-value" id="total-books">0</div>
                     </div>
                     <div class="stat-card space">
-                        <div class="stat-card-header"><i class="fas fa-landmark"></i>Library Space</div>
-                        <div class="stat-card-value">0</div>
+                        <div class="stat-card-header"><i class="fas fa-book-reader"></i>Borrowed Books</div>
+                        <div class="stat-card-value" id="borrowed-books">0</div>
+                    </div>
+                    <div class="stat-card staff">
+                        <div class="stat-card-header"><i class="fas fa-users-cog"></i>Total Staff</div>
+                        <div class="stat-card-value" id="total-staff">0</div>
                     </div>
                 </div>
                 
@@ -374,47 +378,14 @@
                     <table class="activity-table">
                         <thead>
                             <tr>
-                                <th>Activity</th>
-                                <th>User</th>
-                                <th>Age</th>
-                                <th>Sex</th>
-                                <th>School/Organization</th>
-                                <th>Time</th>
+                                <th>Activity Type</th>
+                                <th>Book Title</th>
+                                <th>Member Name</th>
+                                <th>Date</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>Library Resources</td>
-                                <td>0002</td>
-                                <td>30</td>
-                                <td>Female</td>
-                                <td>Organization B</td>
-                                <td>2023-05-23 18:48:40</td>
-                            </tr>
-                            <tr>
-                                <td>Library Resources</td>
-                                <td>0002</td>
-                                <td>30</td>
-                                <td>Female</td>
-                                <td>Organization B</td>
-                                <td>2023-05-23 18:48:32</td>
-                            </tr>
-                            <tr>
-                                <td>Library Resources</td>
-                                <td>0002</td>
-                                <td>30</td>
-                                <td>Female</td>
-                                <td>Organization B</td>
-                                <td>2023-05-23 18:48:27</td>
-                            </tr>
-                             <tr>
-                                <td>Library Resources</td>
-                                <td>0002</td>
-                                <td>30</td>
-                                <td>Female</td>
-                                <td>Organization B</td>
-                                <td>2023-05-23 18:48:20</td>
-                            </tr>
+                        <tbody id="activity-tbody">
+                            <!-- Activity data will be loaded here -->
                         </tbody>
                     </table>
                 </section>
@@ -424,6 +395,61 @@
 
     <script>
         const { ipcRenderer } = require('electron');
+
+        // Load dashboard data when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDashboardStats();
+            await loadRecentActivity();
+        });
+
+        async function loadDashboardStats() {
+            try {
+                const result = await ipcRenderer.invoke('get-dashboard-stats');
+                if (result.success) {
+                    const stats = result.data;
+                    document.getElementById('total-members').textContent = stats.totalMembers;
+                    document.getElementById('total-books').textContent = stats.totalBooks;
+                    document.getElementById('borrowed-books').textContent = stats.totalBorrowed;
+                    document.getElementById('total-staff').textContent = stats.totalStaff;
+                } else {
+                    console.error('Failed to load dashboard stats:', result.message);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+
+        async function loadRecentActivity() {
+            try {
+                const result = await ipcRenderer.invoke('get-dashboard-stats');
+                if (result.success) {
+                    const stats = result.data;
+                    const tbody = document.getElementById('activity-tbody');
+                    tbody.innerHTML = '';
+
+                    if (stats.recentActivity && stats.recentActivity.length > 0) {
+                        stats.recentActivity.forEach(activity => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${activity.type}</td>
+                                <td>${activity.item_name || 'N/A'}</td>
+                                <td>${activity.member_name || 'N/A'}</td>
+                                <td>${new Date(activity.created_at).toLocaleString()}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        const row = document.createElement('tr');
+                        row.innerHTML = '<td colspan="4" style="text-align: center; color: #666;">No recent activity</td>';
+                        tbody.appendChild(row);
+                    }
+                } else {
+                    console.error('Failed to load recent activity:', result.message);
+                }
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+            }
+        }
 
         function logout() {
             ipcRenderer.invoke('load-login');

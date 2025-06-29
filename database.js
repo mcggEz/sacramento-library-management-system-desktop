@@ -1,159 +1,896 @@
+const initSqlJs = require('sql.js');
 const fs = require('fs');
 const path = require('path');
 
 class DatabaseManager {
     constructor() {
-        this.dbPath = path.join(__dirname, 'library_data.json');
-        this.data = this.loadData();
+        this.dbPath = path.join(__dirname, 'library.db');
+        this.db = null;
+        this.initialized = false;
     }
 
-    loadData() {
-        try {
-            if (fs.existsSync(this.dbPath)) {
-                const fileContent = fs.readFileSync(this.dbPath, 'utf8');
-                return JSON.parse(fileContent);
-            }
-        } catch (error) {
-            console.error('Error loading database:', error);
-        }
+    async initTables() {
+        if (this.initialized) return;
         
-        // Return default structure if file doesn't exist or is corrupted
-        return {
-            admin_users: [],
-            attendance: [],
-            lastId: 0
-        };
-    }
-
-    saveData() {
         try {
-            fs.writeFileSync(this.dbPath, JSON.stringify(this.data, null, 2));
-            return true;
+            // Initialize SQL.js with local WebAssembly file
+            const SQL = await initSqlJs({
+                locateFile: file => path.join(__dirname, file)
+            });
+
+            // Load existing database or create new one
+            if (fs.existsSync(this.dbPath)) {
+                const data = fs.readFileSync(this.dbPath);
+                this.db = new SQL.Database(data);
+            } else {
+                this.db = new SQL.Database();
+            }
+
+            this.initialized = true;
+
+            // Create admin_users table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS admin_users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    full_name TEXT,
+                    email TEXT,
+                    role TEXT DEFAULT 'admin',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    last_login DATETIME
+                )
+            `);
+
+            // Create staffs table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS staffs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email TEXT UNIQUE,
+                    role TEXT,
+                    phone TEXT,
+                    department TEXT,
+                    hire_date DATE,
+                    status TEXT DEFAULT 'Active',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            // Create attendance table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS attendance (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    date DATE NOT NULL,
+                    name TEXT NOT NULL,
+                    library_number TEXT,
+                    purpose TEXT,
+                    time TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            // Create members table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS members (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    member_id TEXT UNIQUE NOT NULL,
+                    name TEXT NOT NULL,
+                    email TEXT,
+                    phone TEXT,
+                    address TEXT,
+                    membership_date DATE,
+                    status TEXT DEFAULT 'Active',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            // Create books table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS books (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    isbn TEXT UNIQUE,
+                    title TEXT NOT NULL,
+                    author TEXT,
+                    publisher TEXT,
+                    publication_year INTEGER,
+                    category TEXT,
+                    copies_available INTEGER DEFAULT 1,
+                    total_copies INTEGER DEFAULT 1,
+                    location TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            // Create borrowed_books table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS borrowed_books (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    book_id INTEGER,
+                    member_id INTEGER,
+                    borrowed_date DATE NOT NULL,
+                    due_date DATE NOT NULL,
+                    returned_date DATE,
+                    status TEXT DEFAULT 'Borrowed',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (book_id) REFERENCES books (id),
+                    FOREIGN KEY (member_id) REFERENCES members (id)
+                )
+            `);
+
+            // Create announcements table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS announcements (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    author_id INTEGER,
+                    priority TEXT DEFAULT 'Normal',
+                    is_active BOOLEAN DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (author_id) REFERENCES admin_users (id)
+                )
+            `);
+
+            // Create feedbacks table
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS feedbacks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    member_id INTEGER,
+                    subject TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    rating INTEGER,
+                    status TEXT DEFAULT 'Pending',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (member_id) REFERENCES members (id)
+                )
+            `);
+
+            // Insert default data
+            await this.insertDefaultData();
+
+            // Save the database
+            this.saveDatabase();
+
         } catch (error) {
-            console.error('Error saving database:', error);
-            return false;
+            console.error('Database initialization error:', error);
+            throw error;
         }
     }
 
-    getNextId() {
-        this.data.lastId += 1;
-        return this.data.lastId;
+    async insertDefaultData() {
+        try {
+            // Insert default admin user if not exists
+            const adminExists = this.db.exec('SELECT COUNT(*) as count FROM admin_users WHERE username = "admin"');
+            if (adminExists[0].values.length === 0 || adminExists[0].values[0][0] === 0) {
+                this.db.run(`
+                    INSERT INTO admin_users (username, password, full_name, email, role)
+                    VALUES (?, ?, ?, ?, ?)
+                `, ['admin', 'password', 'System Administrator', 'admin@library.com', 'admin']);
+            }
+
+            // Insert sample staff members if not exists
+            const staffCount = this.db.exec('SELECT COUNT(*) as count FROM staffs');
+            if (staffCount[0].values.length === 0 || staffCount[0].values[0][0] === 0) {
+                const sampleStaffs = [
+                    ['Jane Doe', 'jane.doe@library.com', 'Librarian', '+1 (555) 123-4567', 'Reference', '2023-01-15'],
+                    ['John Smith', 'john.smith@library.com', 'Assistant', '+1 (555) 234-5678', 'Circulation', '2023-03-20'],
+                    ['Maria Garcia', 'maria.garcia@library.com', 'Manager', '+1 (555) 345-6789', 'Administration', '2022-11-10']
+                ];
+
+                for (const staff of sampleStaffs) {
+                    this.db.run(`
+                        INSERT INTO staffs (name, email, role, phone, department, hire_date)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    `, staff);
+                }
+            }
+
+            // Insert sample books if not exists
+            const bookCount = this.db.exec('SELECT COUNT(*) as count FROM books');
+            if (bookCount[0].values.length === 0 || bookCount[0].values[0][0] === 0) {
+                const sampleBooks = [
+                    ['978-0-7475-3269-9', 'Harry Potter and the Philosopher\'s Stone', 'J.K. Rowling', 'Bloomsbury', 1997, 'Fantasy', 5, 5, 'Fiction Section'],
+                    ['978-0-14-028333-4', 'The Great Gatsby', 'F. Scott Fitzgerald', 'Scribner', 1925, 'Classic', 3, 3, 'Classic Section'],
+                    ['978-0-06-112008-4', 'To Kill a Mockingbird', 'Harper Lee', 'Harper Perennial', 1960, 'Classic', 4, 4, 'Classic Section']
+                ];
+
+                for (const book of sampleBooks) {
+                    this.db.run(`
+                        INSERT INTO books (isbn, title, author, publisher, publication_year, category, copies_available, total_copies, location)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `, book);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error inserting default data:', error);
+            throw error;
+        }
     }
 
-    initTables() {
-        // Check if admin user exists, if not create default admin
-        const adminExists = this.data.admin_users.find(user => user.username === 'admin');
-        if (!adminExists) {
-            const adminUser = {
-                id: this.getNextId(),
-                username: 'admin',
-                password: 'password',
-                full_name: 'System Administrator',
-                email: 'admin@library.com',
-                role: 'admin',
-                created_at: new Date().toISOString(),
-                last_login: null
-            };
-            this.data.admin_users.push(adminUser);
-            this.saveData();
+    saveDatabase() {
+        if (this.db) {
+            const data = this.db.export();
+            fs.writeFileSync(this.dbPath, data);
         }
     }
 
     // Admin authentication
-    authenticateAdmin(username, password) {
-        const user = this.data.admin_users.find(u => u.username === username && u.password === password);
-        if (user) {
-            // Update last login
-            user.last_login = new Date().toISOString();
-            this.saveData();
-            return true;
+    async authenticateAdmin(username, password) {
+        try {
+            const result = this.db.exec(
+                'SELECT * FROM admin_users WHERE username = ? AND password = ?',
+                [username, password]
+            );
+            
+            if (result.length > 0 && result[0].values.length > 0) {
+                const user = result[0];
+                const userId = user.values[0][0]; // Assuming id is the first column
+                
+                // Update last login
+                this.db.run(
+                    'UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+                    [userId]
+                );
+                this.saveDatabase();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Authentication error:', error);
+            throw error;
         }
-        return false;
     }
 
     // Get admin user by username
-    getAdminByUsername(username) {
-        return this.data.admin_users.find(u => u.username === username);
+    async getAdminByUsername(username) {
+        try {
+            const result = this.db.exec(
+                'SELECT * FROM admin_users WHERE username = ?',
+                [username]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const user = {};
+                columns.forEach((col, index) => {
+                    user[col] = values[index];
+                });
+                return user;
+            }
+            return null;
+        } catch (error) {
+            console.error('Get admin error:', error);
+            throw error;
+        }
     }
 
     // Get all admin users
-    getAllAdmins() {
-        return this.data.admin_users;
+    async getAllAdmins() {
+        try {
+            const result = this.db.exec('SELECT * FROM admin_users ORDER BY created_at DESC');
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get all admins error:', error);
+            throw error;
+        }
+    }
+
+    // Helper method to format SQL.js results
+    formatResult(sqlResult) {
+        const columns = sqlResult.columns;
+        const values = sqlResult.values;
+        return values.map(row => {
+            const obj = {};
+            columns.forEach((col, index) => {
+                obj[col] = row[index];
+            });
+            return obj;
+        });
     }
 
     // Add new admin user
-    addAdminUser(data) {
-        const newUser = {
-            id: this.getNextId(),
-            username: data.username,
-            password: data.password,
-            full_name: data.full_name || '',
-            email: data.email || '',
-            role: data.role || 'admin',
-            created_at: new Date().toISOString(),
-            last_login: null
-        };
-        
-        this.data.admin_users.push(newUser);
-        this.saveData();
-        return { lastInsertRowid: newUser.id };
+    async addAdminUser(data) {
+        try {
+            this.db.run(`
+                INSERT INTO admin_users (username, password, full_name, email, role)
+                VALUES (?, ?, ?, ?, ?)
+            `, [data.username, data.password, data.full_name, data.email, data.role]);
+            
+            this.saveDatabase();
+            
+            const result = this.db.exec(
+                'SELECT * FROM admin_users WHERE username = ?',
+                [data.username]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const user = {};
+                columns.forEach((col, index) => {
+                    user[col] = values[index];
+                });
+                return user;
+            }
+            return data;
+        } catch (error) {
+            console.error('Add admin error:', error);
+            throw error;
+        }
     }
 
     // Update admin user
-    updateAdminUser(id, data) {
-        const userIndex = this.data.admin_users.findIndex(u => u.id === id);
-        if (userIndex !== -1) {
-            const user = this.data.admin_users[userIndex];
-            if (data.username) user.username = data.username;
-            if (data.password) user.password = data.password;
-            if (data.full_name) user.full_name = data.full_name;
-            if (data.email) user.email = data.email;
-            if (data.role) user.role = data.role;
-            
-            this.saveData();
-            return { changes: 1 };
+    async updateAdminUser(id, data) {
+        try {
+            this.db.run(`
+                UPDATE admin_users 
+                SET username = ?, password = ?, full_name = ?, email = ?, role = ?
+                WHERE id = ?
+            `, [data.username, data.password, data.full_name, data.email, data.role, id]);
+            this.saveDatabase();
+            return { id, ...data };
+        } catch (error) {
+            console.error('Update admin error:', error);
+            throw error;
         }
-        return null;
     }
 
     // Delete admin user
-    deleteAdminUser(id) {
-        const userIndex = this.data.admin_users.findIndex(u => u.id === id);
-        if (userIndex !== -1) {
-            this.data.admin_users.splice(userIndex, 1);
-            this.saveData();
-            return { changes: 1 };
+    async deleteAdminUser(id) {
+        try {
+            this.db.run('DELETE FROM admin_users WHERE id = ?', [id]);
+            this.saveDatabase();
+            return { id };
+        } catch (error) {
+            console.error('Delete admin error:', error);
+            throw error;
         }
-        return { changes: 0 };
     }
 
-    // Add attendance record
-    addAttendance(data) {
-        const record = {
-            id: this.getNextId(),
-            date: data.date,
-            name: data.name,
-            library_number: data.libraryNumber,
-            purpose: data.purpose,
-            time: data.time,
-            created_at: new Date().toISOString()
-        };
-        
-        this.data.attendance.push(record);
-        this.saveData();
-        return { lastInsertRowid: record.id };
+    // Add attendance
+    async addAttendance(data) {
+        try {
+            this.db.run(`
+                INSERT INTO attendance (date, name, library_number, purpose, time)
+                VALUES (?, ?, ?, ?, ?)
+            `, [data.date, data.name, data.library_number, data.purpose, data.time]);
+            
+            this.saveDatabase();
+            
+            const result = this.db.exec(
+                'SELECT * FROM attendance WHERE date = ? AND name = ? ORDER BY id DESC LIMIT 1',
+                [data.date, data.name]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const attendance = {};
+                columns.forEach((col, index) => {
+                    attendance[col] = values[index];
+                });
+                return attendance;
+            }
+            return data;
+        } catch (error) {
+            console.error('Add attendance error:', error);
+            throw error;
+        }
     }
 
-    // Get all attendance records
-    getAttendance() {
-        return this.data.attendance.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    // Get attendance
+    async getAttendance() {
+        try {
+            const result = this.db.exec('SELECT * FROM attendance ORDER BY date DESC');
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get attendance error:', error);
+            throw error;
+        }
     }
 
-    // Close database connection (no-op for JSON database)
-    close() {
-        // Nothing to close for JSON database
+    // Get all staffs
+    async getAllStaffs() {
+        try {
+            const result = this.db.exec('SELECT * FROM staffs ORDER BY created_at DESC');
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get all staffs error:', error);
+            throw error;
+        }
+    }
+
+    // Get staff by ID
+    async getStaffById(id) {
+        try {
+            const result = this.db.exec('SELECT * FROM staffs WHERE id = ?', [id]);
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const staff = {};
+                columns.forEach((col, index) => {
+                    staff[col] = values[index];
+                });
+                return staff;
+            }
+            return null;
+        } catch (error) {
+            console.error('Get staff error:', error);
+            throw error;
+        }
+    }
+
+    // Add staff
+    async addStaff(data) {
+        try {
+            this.db.run(`
+                INSERT INTO staffs (name, email, role, phone, department, hire_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [data.name, data.email, data.role, data.phone, data.department, data.hire_date]);
+            
+            this.saveDatabase();
+            
+            const result = this.db.exec(
+                'SELECT * FROM staffs WHERE email = ? ORDER BY id DESC LIMIT 1',
+                [data.email]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const staff = {};
+                columns.forEach((col, index) => {
+                    staff[col] = values[index];
+                });
+                return staff;
+            }
+            return data;
+        } catch (error) {
+            console.error('Add staff error:', error);
+            throw error;
+        }
+    }
+
+    // Update staff
+    async updateStaff(id, data) {
+        try {
+            this.db.run(`
+                UPDATE staffs 
+                SET name = ?, email = ?, role = ?, phone = ?, department = ?, hire_date = ?, status = ?
+                WHERE id = ?
+            `, [data.name, data.email, data.role, data.phone, data.department, data.hire_date, data.status, id]);
+            this.saveDatabase();
+            return { id, ...data };
+        } catch (error) {
+            console.error('Update staff error:', error);
+            throw error;
+        }
+    }
+
+    // Delete staff
+    async deleteStaff(id) {
+        try {
+            this.db.run('DELETE FROM staffs WHERE id = ?', [id]);
+            this.saveDatabase();
+            return { id };
+        } catch (error) {
+            console.error('Delete staff error:', error);
+            throw error;
+        }
+    }
+
+    // Get all members
+    async getAllMembers() {
+        try {
+            const result = this.db.exec('SELECT * FROM members ORDER BY created_at DESC');
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get all members error:', error);
+            throw error;
+        }
+    }
+
+    // Get member by ID
+    async getMemberById(id) {
+        try {
+            const result = this.db.exec('SELECT * FROM members WHERE id = ?', [id]);
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const member = {};
+                columns.forEach((col, index) => {
+                    member[col] = values[index];
+                });
+                return member;
+            }
+            return null;
+        } catch (error) {
+            console.error('Get member error:', error);
+            throw error;
+        }
+    }
+
+    // Add member
+    async addMember(data) {
+        try {
+            this.db.run(`
+                INSERT INTO members (member_id, name, email, phone, address, membership_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [data.member_id, data.name, data.email, data.phone, data.address, data.membership_date]);
+            
+            this.saveDatabase();
+            
+            const result = this.db.exec(
+                'SELECT * FROM members WHERE member_id = ? ORDER BY id DESC LIMIT 1',
+                [data.member_id]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const member = {};
+                columns.forEach((col, index) => {
+                    member[col] = values[index];
+                });
+                return member;
+            }
+            return data;
+        } catch (error) {
+            console.error('Add member error:', error);
+            throw error;
+        }
+    }
+
+    // Update member
+    async updateMember(id, data) {
+        try {
+            this.db.run(`
+                UPDATE members 
+                SET member_id = ?, name = ?, email = ?, phone = ?, address = ?, membership_date = ?, status = ?
+                WHERE id = ?
+            `, [data.member_id, data.name, data.email, data.phone, data.address, data.membership_date, data.status, id]);
+            this.saveDatabase();
+            return { id, ...data };
+        } catch (error) {
+            console.error('Update member error:', error);
+            throw error;
+        }
+    }
+
+    // Delete member
+    async deleteMember(id) {
+        try {
+            this.db.run('DELETE FROM members WHERE id = ?', [id]);
+            this.saveDatabase();
+            return { id };
+        } catch (error) {
+            console.error('Delete member error:', error);
+            throw error;
+        }
+    }
+
+    // Get all books
+    async getAllBooks() {
+        try {
+            const result = this.db.exec('SELECT * FROM books ORDER BY created_at DESC');
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get all books error:', error);
+            throw error;
+        }
+    }
+
+    // Get book by ID
+    async getBookById(id) {
+        try {
+            const result = this.db.exec('SELECT * FROM books WHERE id = ?', [id]);
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const book = {};
+                columns.forEach((col, index) => {
+                    book[col] = values[index];
+                });
+                return book;
+            }
+            return null;
+        } catch (error) {
+            console.error('Get book error:', error);
+            throw error;
+        }
+    }
+
+    // Add book
+    async addBook(data) {
+        try {
+            this.db.run(`
+                INSERT INTO books (isbn, title, author, publisher, publication_year, category, copies_available, total_copies, location)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [data.isbn, data.title, data.author, data.publisher, data.publication_year, data.category, data.copies_available, data.total_copies, data.location]);
+            
+            this.saveDatabase();
+            
+            const result = this.db.exec(
+                'SELECT * FROM books WHERE isbn = ? ORDER BY id DESC LIMIT 1',
+                [data.isbn]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const book = {};
+                columns.forEach((col, index) => {
+                    book[col] = values[index];
+                });
+                return book;
+            }
+            return data;
+        } catch (error) {
+            console.error('Add book error:', error);
+            throw error;
+        }
+    }
+
+    // Update book
+    async updateBook(id, data) {
+        try {
+            this.db.run(`
+                UPDATE books 
+                SET isbn = ?, title = ?, author = ?, publisher = ?, publication_year = ?, category = ?, copies_available = ?, total_copies = ?, location = ?
+                WHERE id = ?
+            `, [data.isbn, data.title, data.author, data.publisher, data.publication_year, data.category, data.copies_available, data.total_copies, data.location, id]);
+            this.saveDatabase();
+            return { id, ...data };
+        } catch (error) {
+            console.error('Update book error:', error);
+            throw error;
+        }
+    }
+
+    // Delete book
+    async deleteBook(id) {
+        try {
+            this.db.run('DELETE FROM books WHERE id = ?', [id]);
+            this.saveDatabase();
+            return { id };
+        } catch (error) {
+            console.error('Delete book error:', error);
+            throw error;
+        }
+    }
+
+    // Get all borrowed books
+    async getAllBorrowedBooks() {
+        try {
+            const result = this.db.exec(`
+                SELECT bb.*, b.title as book_title, m.name as member_name
+                FROM borrowed_books bb
+                LEFT JOIN books b ON bb.book_id = b.id
+                LEFT JOIN members m ON bb.member_id = m.id
+                ORDER BY bb.borrowed_date DESC
+            `);
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get all borrowed books error:', error);
+            throw error;
+        }
+    }
+
+    // Add borrowed book
+    async addBorrowedBook(data) {
+        try {
+            this.db.run(`
+                INSERT INTO borrowed_books (book_id, member_id, borrowed_date, due_date)
+                VALUES (?, ?, ?, ?)
+            `, [data.book_id, data.member_id, data.borrowed_date, data.due_date]);
+            
+            // Update book availability
+            this.db.run(
+                'UPDATE books SET copies_available = copies_available - 1 WHERE id = ?',
+                [data.book_id]
+            );
+            
+            this.saveDatabase();
+            
+            const result = this.db.exec(
+                'SELECT * FROM borrowed_books WHERE book_id = ? AND member_id = ? ORDER BY id DESC LIMIT 1',
+                [data.book_id, data.member_id]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const borrowedBook = {};
+                columns.forEach((col, index) => {
+                    borrowedBook[col] = values[index];
+                });
+                return borrowedBook;
+            }
+            return data;
+        } catch (error) {
+            console.error('Add borrowed book error:', error);
+            throw error;
+        }
+    }
+
+    // Return book
+    async returnBook(id) {
+        try {
+            this.db.run(`
+                UPDATE borrowed_books 
+                SET returned_date = CURRENT_DATE, status = 'Returned'
+                WHERE id = ?
+            `, [id]);
+            
+            // Update book availability
+            this.db.run(
+                'UPDATE books SET copies_available = copies_available + 1 WHERE id = (SELECT book_id FROM borrowed_books WHERE id = ?)',
+                [id]
+            );
+            
+            this.saveDatabase();
+            return { id };
+        } catch (error) {
+            console.error('Return book error:', error);
+            throw error;
+        }
+    }
+
+    // Get all announcements
+    async getAllAnnouncements() {
+        try {
+            const result = this.db.exec(`
+                SELECT a.*, au.full_name as author_name
+                FROM announcements a
+                LEFT JOIN admin_users au ON a.author_id = au.id
+                WHERE a.is_active = 1
+                ORDER BY a.created_at DESC
+            `);
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get all announcements error:', error);
+            throw error;
+        }
+    }
+
+    // Add announcement
+    async addAnnouncement(data) {
+        try {
+            this.db.run(`
+                INSERT INTO announcements (title, content, author_id, priority)
+                VALUES (?, ?, ?, ?)
+            `, [data.title, data.content, data.author_id, data.priority]);
+            
+            this.saveDatabase();
+            
+            const result = this.db.exec(
+                'SELECT * FROM announcements WHERE title = ? ORDER BY id DESC LIMIT 1',
+                [data.title]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const announcement = {};
+                columns.forEach((col, index) => {
+                    announcement[col] = values[index];
+                });
+                return announcement;
+            }
+            return data;
+        } catch (error) {
+            console.error('Add announcement error:', error);
+            throw error;
+        }
+    }
+
+    // Get all feedbacks
+    async getAllFeedbacks() {
+        try {
+            const result = this.db.exec(`
+                SELECT f.*, m.name as member_name
+                FROM feedbacks f
+                LEFT JOIN members m ON f.member_id = m.id
+                ORDER BY f.created_at DESC
+            `);
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get all feedbacks error:', error);
+            throw error;
+        }
+    }
+
+    // Add feedback
+    async addFeedback(data) {
+        try {
+            this.db.run(`
+                INSERT INTO feedbacks (member_id, subject, message, rating)
+                VALUES (?, ?, ?, ?)
+            `, [data.member_id, data.subject, data.message, data.rating]);
+            
+            this.saveDatabase();
+            
+            const result = this.db.exec(
+                'SELECT * FROM feedbacks WHERE member_id = ? ORDER BY id DESC LIMIT 1',
+                [data.member_id]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const feedback = {};
+                columns.forEach((col, index) => {
+                    feedback[col] = values[index];
+                });
+                return feedback;
+            }
+            return data;
+        } catch (error) {
+            console.error('Add feedback error:', error);
+            throw error;
+        }
+    }
+
+    // Get dashboard stats
+    async getDashboardStats() {
+        try {
+            const stats = {};
+
+            // Total members
+            const memberCount = this.db.exec('SELECT COUNT(*) as count FROM members WHERE status = "Active"');
+            stats.totalMembers = memberCount[0].values[0][0];
+
+            // Total books
+            const bookCount = this.db.exec('SELECT COUNT(*) as count FROM books');
+            stats.totalBooks = bookCount[0].values[0][0];
+
+            // Available books
+            const availableBooks = this.db.exec('SELECT SUM(copies_available) as count FROM books');
+            stats.availableBooks = availableBooks[0].values[0][0] || 0;
+
+            // Borrowed books
+            const borrowedBooks = this.db.exec('SELECT COUNT(*) as count FROM borrowed_books WHERE status = "Borrowed"');
+            stats.borrowedBooks = borrowedBooks[0].values[0][0];
+
+            // Total staff
+            const staffCount = this.db.exec('SELECT COUNT(*) as count FROM staffs WHERE status = "Active"');
+            stats.totalStaff = staffCount[0].values[0][0];
+
+            // Recent activities (last 7 days)
+            const recentActivities = this.db.exec('SELECT COUNT(*) as count FROM borrowed_books WHERE borrowed_date >= date("now", "-7 days")');
+            stats.recentActivities = recentActivities[0].values[0][0];
+
+            return stats;
+        } catch (error) {
+            console.error('Get dashboard stats error:', error);
+            throw error;
+        }
+    }
+
+    // Close database connection
+    async close() {
+        // Save database before closing
+        this.saveDatabase();
+        return Promise.resolve();
     }
 }
 
-module.exports = DatabaseManager;
-
+module.exports = DatabaseManager; 
