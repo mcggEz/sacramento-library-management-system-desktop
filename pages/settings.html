@@ -8,9 +8,9 @@
     <style>
         /* Reusing the same styles from dashboard.html for consistency */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f0f2f5; }
+        body { background-color: #f0f2f5; color: #333; transition: background-color 0.3s, color 0.3s; }
         .wrapper { display: flex; height: 100vh; }
-        .sidebar { width: 260px; background-color: #fff; padding: 1.5rem; transition: width 0.3s ease; box-shadow: 2px 0 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .sidebar { width: 260px; background-color: #fff; padding: 1.5rem; transition: width 0.3s ease, background-color 0.3s; box-shadow: 2px 0 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         .sidebar.collapsed { width: 90px; }
         .sidebar.collapsed .nav-text, .sidebar.collapsed .logout-text { display: none; }
         .sidebar.collapsed .nav-link, .sidebar.collapsed .logout { justify-content: center; }
@@ -24,7 +24,7 @@
         .sidebar.collapsed .logout i { margin-right: 0; }
         .logout:hover { background-color: #ffebee; color: #d32f2f; }
         .main-content { flex: 1; overflow-y: auto; }
-        .header { background-color: #4CAF50; color: white; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+        .header { background-color: #4CAF50; color: white; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; transition: background-color 0.3s; }
         .header-left { display: flex; align-items: center; }
         .header-logo { width: 40px; height: 40px; margin-right: 1rem; }
         .header-title { font-size: 1.5rem; font-weight: 500; }
@@ -34,7 +34,38 @@
         .menu-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 1rem; color: #333; }
         .page-title { font-size: 2rem; font-weight: 600; color: #333; display: flex; align-items: center; }
         .page-title i { margin-right: 1rem; color: #4CAF50; }
-        .content-section { background-color: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .content-section { background-color: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: background-color 0.3s; }
+
+        /* Settings specific styles */
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid #eee; }
+        .setting-item:last-child { border-bottom: none; }
+        .setting-label { display: flex; align-items: center; font-size: 1rem; }
+        .setting-label i { margin-right: 1rem; color: #4CAF50; width: 20px; text-align: center; }
+        
+        /* Toggle Switch CSS */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4CAF50; }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Dark Mode Styles */
+        body.dark-mode { background-color: #121212; color: #e0e0e0; }
+        .dark-mode .sidebar { background-color: #1e1e1e; box-shadow: 2px 0 5px rgba(255,255,255,0.05); }
+        .dark-mode .nav-link { color: #b0b0b0; }
+        .dark-mode .nav-link:hover, .dark-mode .nav-link.active { background-color: #2c2c2c; color: #4CAF50; }
+        .dark-mode .logout { color: #b0b0b0; }
+        .dark-mode .logout:hover { background-color: #3c1e1e; color: #f44336; }
+        .dark-mode .main-content { color: #e0e0e0; }
+        .dark-mode .header { background-color: #1e1e1e; border-bottom: 1px solid #333; }
+        .dark-mode .header-title { color: #e0e0e0; }
+        .dark-mode .header-right a { color: #e0e0e0; }
+        .dark-mode .menu-toggle { color: #e0e0e0; }
+        .dark-mode .page-title { color: #e0e0e0; }
+        .dark-mode .content-section { background-color: #1e1e1e; box-shadow: 0 2px 4px rgba(255,255,255,0.05); }
+        .dark-mode .setting-label { color: #e0e0e0; }
+        .dark-mode .setting-item { border-bottom: 1px solid #333; }
     </style>
 </head>
 <body>
@@ -46,7 +77,6 @@
                 <li><a href="#" class="nav-link" data-page="members"><i class="fas fa-users"></i><span class="nav-text">Members</span></a></li>
                 <li><a href="#" class="nav-link" data-page="books"><i class="fas fa-book"></i><span class="nav-text">Books</span></a></li>
                 <li><a href="#" class="nav-link" data-page="borrowed-books"><i class="fas fa-book-reader"></i><span class="nav-text">Borrowed Books</span></a></li>
-               
                 <li><a href="#" class="nav-link" data-page="help"><i class="fas fa-question-circle"></i><span class="nav-text">Help</span></a></li>
                 <li><a href="#" class="nav-link" data-page="reports"><i class="fas fa-chart-bar"></i><span class="nav-text">Reports</span></a></li>
                 <li><a href="#" class="nav-link active" data-page="settings"><i class="fas fa-cog"></i><span class="nav-text">Settings</span></a></li>
@@ -72,8 +102,19 @@
                 </div>
                 
                 <section class="content-section">
-                    <h2>Settings Content Goes Here</h2>
-                    <p>Dark mode</p>
+                    <h2>Appearance</h2>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <i class="fas fa-moon"></i>
+                            <span>Dark Mode</span>
+                        </div>
+                        <div class="setting-control">
+                            <label class="switch">
+                                <input type="checkbox" id="darkModeToggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
                 </section>
             </div>
         </main>
@@ -82,9 +123,11 @@
     <script>
         const { ipcRenderer } = require('electron');
         function logout() { ipcRenderer.invoke('load-login'); }
+
         document.getElementById('menu-toggle').addEventListener('click', () => {
             document.getElementById('sidebar').classList.toggle('collapsed');
         });
+
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -93,8 +136,37 @@
             });
         });
 
-        // Header navigation
         document.getElementById('library-forms-link').addEventListener('click', () => ipcRenderer.invoke('load-library-forms'));
+
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        // Apply theme on initial load
+        function applyTheme() {
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                body.classList.add('dark-mode');
+                darkModeToggle.checked = true;
+            } else {
+                body.classList.remove('dark-mode');
+                darkModeToggle.checked = false;
+            }
+        }
+
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'false');
+            }
+        });
+        
+        // Ensure theme is applied when the page loads
+        applyTheme();
+
     </script>
 </body>
-</html> 
+</html>

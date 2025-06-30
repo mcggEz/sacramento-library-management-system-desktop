@@ -146,6 +146,67 @@ class DatabaseManager {
                 )
             `);
 
+            // Create library_users table (unified user management)
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS library_users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    email TEXT UNIQUE,
+                    first_name TEXT NOT NULL,
+                    last_name TEXT NOT NULL,
+                    middle_name TEXT,
+                    phone TEXT,
+                    address TEXT,
+                    user_type TEXT NOT NULL,
+                    role TEXT,
+                    department TEXT,
+                    membership_id TEXT,
+                    student_id TEXT,
+                    date_of_birth DATE,
+                    gender TEXT,
+                    course TEXT,
+                    year_level TEXT,
+                    section TEXT,
+                    enrollment_date DATE,
+                    membership_date DATE,
+                    hire_date DATE,
+                    status TEXT DEFAULT 'Active',
+                    is_verified BOOLEAN DEFAULT 0,
+                    last_login DATETIME,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            // Create user_sessions table for tracking login sessions
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS user_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    session_token TEXT UNIQUE NOT NULL,
+                    ip_address TEXT,
+                    user_agent TEXT,
+                    login_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    logout_time DATETIME,
+                    is_active BOOLEAN DEFAULT 1,
+                    FOREIGN KEY (user_id) REFERENCES library_users (id)
+                )
+            `);
+
+            // Create user_permissions table for role-based access control
+            this.db.run(`
+                CREATE TABLE IF NOT EXISTS user_permissions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    permission_name TEXT NOT NULL,
+                    permission_value BOOLEAN DEFAULT 1,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES library_users (id),
+                    UNIQUE(user_id, permission_name)
+                )
+            `);
+
             // Insert default data
             await this.insertDefaultData();
 
@@ -200,6 +261,42 @@ class DatabaseManager {
                         INSERT INTO books (isbn, title, author, publisher, publication_year, category, copies_available, total_copies, location)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `, book);
+                }
+            }
+
+            // Insert sample library users if not exists
+            const userCount = this.db.exec('SELECT COUNT(*) as count FROM library_users');
+            if (userCount[0].values.length === 0 || userCount[0].values[0][0] === 0) {
+                const sampleUsers = [
+                    // Admin users
+                    ['admin', 'password', 'admin@library.com', 'System', 'Administrator', '', '+1 (555) 000-0001', '123 Admin St', 'admin', 'System Administrator', 'IT', null, null, null, null, null, null, null, null, null, null, null, 'Active', 1],
+                    ['librarian', 'password', 'librarian@library.com', 'Jane', 'Doe', 'Marie', '+1 (555) 123-4567', '456 Library Ave', 'staff', 'Senior Librarian', 'Reference', null, null, null, null, null, null, null, null, null, '2023-01-15', null, 'Active', 1],
+                    
+                    // Staff users
+                    ['assistant', 'password', 'assistant@library.com', 'John', 'Smith', 'David', '+1 (555) 234-5678', '789 Staff Rd', 'staff', 'Library Assistant', 'Circulation', null, null, null, null, null, null, null, null, null, null, '2023-03-20', 'Active', 1],
+                    ['manager', 'password', 'manager@library.com', 'Maria', 'Garcia', 'Isabella', '+1 (555) 345-6789', '321 Manager Blvd', 'staff', 'Library Manager', 'Administration', null, null, null, null, null, null, null, null, null, null, '2022-11-10', 'Active', 1],
+                    
+                    // Member users
+                    ['alice.brown', 'password', 'alice.brown@email.com', 'Alice', 'Brown', 'Elizabeth', '+1 (555) 111-2222', '123 Member St', 'member', 'Regular Member', null, 'MEM-001', null, '1990-05-15', 'Female', null, null, null, null, '2023-06-01', null, 'Active', 1],
+                    ['bob.lee', 'password', 'bob.lee@email.com', 'Bob', 'Lee', 'Michael', '+1 (555) 222-3333', '456 Patron Ave', 'member', 'Student Member', null, 'MEM-002', null, '1995-08-22', 'Male', null, null, null, null, '2023-07-15', null, 'Active', 1],
+                    ['cathy.white', 'password', 'cathy.white@email.com', 'Cathy', 'White', 'Anne', '+1 (555) 333-4444', '789 Senior Rd', 'member', 'Senior Member', null, 'MEM-003', null, '1965-12-10', 'Female', null, null, null, null, '2023-05-20', null, 'Active', 1],
+                    
+                    // Student users
+                    ['john.doe', 'password', 'john.doe@student.edu', 'John', 'Doe', 'Michael', '+1 (555) 444-5555', '123 Campus St', 'student', 'Student', null, null, '2023-001', '2005-03-15', 'Male', 'Computer Science', '2nd Year', 'A', '2023-08-15', null, null, null, 'Active', 1],
+                    ['sarah.johnson', 'password', 'sarah.johnson@student.edu', 'Sarah', 'Johnson', 'Elizabeth', '+1 (555) 555-6666', '456 University Ave', 'student', 'Student', null, null, '2023-002', '2004-07-22', 'Female', 'Business Administration', '3rd Year', 'B', '2023-08-15', null, null, null, 'Active', 1],
+                    ['michael.chen', 'password', 'michael.chen@student.edu', 'Michael', 'Chen', 'David', '+1 (555) 666-7777', '789 College Rd', 'student', 'Student', null, null, '2023-003', '2005-11-08', 'Male', 'Engineering', '1st Year', 'C', '2023-08-15', null, null, null, 'Active', 1]
+                ];
+
+                for (const user of sampleUsers) {
+                    try {
+                        this.db.run(`
+                            INSERT INTO library_users (username, password, email, first_name, last_name, middle_name, phone, address, user_type, role, department, membership_id, student_id, date_of_birth, gender, course, year_level, section, enrollment_date, membership_date, hire_date, status, is_verified)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        `, user);
+                    } catch (userError) {
+                        console.error('Error inserting user:', user[0], userError);
+                        // Continue with other users even if one fails
+                    }
                 }
             }
 
@@ -858,6 +955,20 @@ class DatabaseManager {
             const memberCount = this.db.exec('SELECT COUNT(*) as count FROM members WHERE status = "Active"');
             stats.totalMembers = memberCount[0].values[0][0];
 
+            // Total library users
+            const userCount = this.db.exec('SELECT COUNT(*) as count FROM library_users WHERE status = "Active"');
+            stats.totalUsers = userCount[0].values[0][0];
+
+            // Users by type
+            const usersByType = this.db.exec(`
+                SELECT user_type, COUNT(*) as count 
+                FROM library_users 
+                WHERE status = "Active" 
+                GROUP BY user_type 
+                ORDER BY count DESC
+            `);
+            stats.usersByType = usersByType.length > 0 ? this.formatResult(usersByType[0]) : [];
+
             // Total books
             const bookCount = this.db.exec('SELECT COUNT(*) as count FROM books');
             stats.totalBooks = bookCount[0].values[0][0];
@@ -881,6 +992,271 @@ class DatabaseManager {
             return stats;
         } catch (error) {
             console.error('Get dashboard stats error:', error);
+            throw error;
+        }
+    }
+
+    // ===== LIBRARY USERS MANAGEMENT =====
+
+    // Authenticate library user
+    async authenticateLibraryUser(username, password) {
+        try {
+            const result = this.db.exec(
+                'SELECT * FROM library_users WHERE username = ? AND password = ? AND status = "Active"',
+                [username, password]
+            );
+            
+            if (result.length > 0 && result[0].values.length > 0) {
+                const user = result[0];
+                const userId = user.values[0][0];
+                
+                // Update last login
+                this.db.run(
+                    'UPDATE library_users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+                    [userId]
+                );
+                this.saveDatabase();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Library user authentication error:', error);
+            throw error;
+        }
+    }
+
+    // Get library user by username
+    async getLibraryUserByUsername(username) {
+        try {
+            const result = this.db.exec(
+                'SELECT * FROM library_users WHERE username = ?',
+                [username]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const user = {};
+                columns.forEach((col, index) => {
+                    user[col] = values[index];
+                });
+                return user;
+            }
+            return null;
+        } catch (error) {
+            console.error('Get library user error:', error);
+            throw error;
+        }
+    }
+
+    // Get library user by ID
+    async getLibraryUserById(id) {
+        try {
+            const result = this.db.exec('SELECT * FROM library_users WHERE id = ?', [id]);
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const user = {};
+                columns.forEach((col, index) => {
+                    user[col] = values[index];
+                });
+                return user;
+            }
+            return null;
+        } catch (error) {
+            console.error('Get library user by ID error:', error);
+            throw error;
+        }
+    }
+
+    // Get all library users
+    async getAllLibraryUsers() {
+        try {
+            const result = this.db.exec('SELECT * FROM library_users ORDER BY created_at DESC');
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get all library users error:', error);
+            throw error;
+        }
+    }
+
+    // Get users by type
+    async getLibraryUsersByType(userType) {
+        try {
+            const result = this.db.exec(
+                'SELECT * FROM library_users WHERE user_type = ? ORDER BY last_name, first_name',
+                [userType]
+            );
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get library users by type error:', error);
+            throw error;
+        }
+    }
+
+    // Add library user
+    async addLibraryUser(data) {
+        try {
+            this.db.run(`
+                INSERT INTO library_users (username, password, email, first_name, last_name, middle_name, phone, address, user_type, role, department, membership_id, student_id, date_of_birth, gender, course, year_level, section, enrollment_date, membership_date, hire_date, status, is_verified)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [data.username, data.password, data.email, data.first_name, data.last_name, data.middle_name, data.phone, data.address, data.user_type, data.role, data.department, data.membership_id, data.student_id, data.date_of_birth, data.gender, data.course, data.year_level, data.section, data.enrollment_date, data.membership_date, data.hire_date, data.status, data.is_verified]);
+            
+            this.saveDatabase();
+            
+            const result = this.db.exec(
+                'SELECT * FROM library_users WHERE username = ? ORDER BY id DESC LIMIT 1',
+                [data.username]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const user = {};
+                columns.forEach((col, index) => {
+                    user[col] = values[index];
+                });
+                return user;
+            }
+            return data;
+        } catch (error) {
+            console.error('Add library user error:', error);
+            throw error;
+        }
+    }
+
+    // Update library user
+    async updateLibraryUser(id, data) {
+        try {
+            this.db.run(`
+                UPDATE library_users 
+                SET username = ?, password = ?, email = ?, first_name = ?, last_name = ?, middle_name = ?, phone = ?, address = ?, user_type = ?, role = ?, department = ?, membership_id = ?, student_id = ?, date_of_birth = ?, gender = ?, course = ?, year_level = ?, section = ?, enrollment_date = ?, membership_date = ?, hire_date = ?, status = ?, is_verified = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `, [data.username, data.password, data.email, data.first_name, data.last_name, data.middle_name, data.phone, data.address, data.user_type, data.role, data.department, data.membership_id, data.student_id, data.date_of_birth, data.gender, data.course, data.year_level, data.section, data.enrollment_date, data.membership_date, data.hire_date, data.status, data.is_verified, id]);
+            this.saveDatabase();
+            return { id, ...data };
+        } catch (error) {
+            console.error('Update library user error:', error);
+            throw error;
+        }
+    }
+
+    // Delete library user
+    async deleteLibraryUser(id) {
+        try {
+            this.db.run('DELETE FROM library_users WHERE id = ?', [id]);
+            this.saveDatabase();
+            return { id };
+        } catch (error) {
+            console.error('Delete library user error:', error);
+            throw error;
+        }
+    }
+
+    // Search library users
+    async searchLibraryUsers(query) {
+        try {
+            const result = this.db.exec(`
+                SELECT * FROM library_users 
+                WHERE username LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR membership_id LIKE ? OR student_id LIKE ?
+                ORDER BY last_name, first_name
+            `, [`%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`]);
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Search library users error:', error);
+            throw error;
+        }
+    }
+
+    // Create user session
+    async createUserSession(userId, sessionToken, ipAddress, userAgent) {
+        try {
+            this.db.run(`
+                INSERT INTO user_sessions (user_id, session_token, ip_address, user_agent)
+                VALUES (?, ?, ?, ?)
+            `, [userId, sessionToken, ipAddress, userAgent]);
+            this.saveDatabase();
+            return { userId, sessionToken };
+        } catch (error) {
+            console.error('Create user session error:', error);
+            throw error;
+        }
+    }
+
+    // Validate user session
+    async validateUserSession(sessionToken) {
+        try {
+            const result = this.db.exec(
+                'SELECT * FROM user_sessions WHERE session_token = ? AND is_active = 1',
+                [sessionToken]
+            );
+            if (result.length > 0 && result[0].values.length > 0) {
+                const columns = result[0].columns;
+                const values = result[0].values[0];
+                const session = {};
+                columns.forEach((col, index) => {
+                    session[col] = values[index];
+                });
+                return session;
+            }
+            return null;
+        } catch (error) {
+            console.error('Validate user session error:', error);
+            throw error;
+        }
+    }
+
+    // Logout user session
+    async logoutUserSession(sessionToken) {
+        try {
+            this.db.run(`
+                UPDATE user_sessions 
+                SET logout_time = CURRENT_TIMESTAMP, is_active = 0
+                WHERE session_token = ?
+            `, [sessionToken]);
+            this.saveDatabase();
+            return { sessionToken };
+        } catch (error) {
+            console.error('Logout user session error:', error);
+            throw error;
+        }
+    }
+
+    // Get user permissions
+    async getUserPermissions(userId) {
+        try {
+            const result = this.db.exec(
+                'SELECT permission_name, permission_value FROM user_permissions WHERE user_id = ?',
+                [userId]
+            );
+            if (result.length > 0) {
+                return this.formatResult(result[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Get user permissions error:', error);
+            throw error;
+        }
+    }
+
+    // Set user permission
+    async setUserPermission(userId, permissionName, permissionValue) {
+        try {
+            this.db.run(`
+                INSERT OR REPLACE INTO user_permissions (user_id, permission_name, permission_value)
+                VALUES (?, ?, ?)
+            `, [userId, permissionName, permissionValue]);
+            this.saveDatabase();
+            return { userId, permissionName, permissionValue };
+        } catch (error) {
+            console.error('Set user permission error:', error);
             throw error;
         }
     }

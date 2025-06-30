@@ -15,6 +15,7 @@
 
         body {
             background-color: #f0f2f5;
+            color: #333;
         }
 
         .wrapper {
@@ -77,8 +78,8 @@
         }
 
         .nav-link:hover, .nav-link.active {
-            background-color: #e8f5e9; /* Light green */
-            color: #4CAF50; /* Green */
+            background-color: #e8f5e9;
+            color: #4CAF50;
         }
         
         .logout {
@@ -196,11 +197,14 @@
             flex-direction: column;
             justify-content: space-between;
             min-height: 120px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        .stat-card.attendance { background-color: #a5d6a7; }
-        .stat-card.resources { background-color: #c5e1a5; }
-        .stat-card.space { background-color: #b9f6ca; }
+        .stat-card.attendance { border-left: 5px solid #4CAF50; }
+        .stat-card.resources { border-left: 5px solid #8BC34A; }
+        .stat-card.space { border-left: 5px solid #CDDC39; }
+        .stat-card.staff { border-left: 5px solid #673AB7; }
         
         .stat-card-header {
             display: flex;
@@ -217,6 +221,7 @@
             font-size: 3rem;
             font-weight: bold;
             text-align: right;
+            color: #4CAF50;
         }
 
         /* Recent Activity */
@@ -249,8 +254,9 @@
         }
         
         .filter-btn {
-            background-color: #f0f2f5;
+            background-color: #f0f0f0;
             border: 1px solid #ddd;
+            color: #333;
             padding: 0.5rem 1rem;
             border-radius: 20px;
             cursor: pointer;
@@ -275,7 +281,9 @@
         }
         
         .date-filter input {
-            border: 1px solid #ddd;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            color: #333;
             padding: 0.5rem;
             border-radius: 6px;
         }
@@ -328,7 +336,7 @@
         <main class="main-content">
             <header class="header">
                 <div class="header-left">
-                    <img src="https://placehold.co/40x40/ffffff/4CAF50?text=L" alt="Logo" class="header-logo">
+                    <img src="https://placehold.co/40x40/1e1e1e/ffffff?text=L" alt="Logo" class="header-logo">
                     <h1 class="header-title">Manila-Sacramento Friendship Library</h1>
                 </div>
                 <div class="header-right">
